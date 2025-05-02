@@ -16,10 +16,13 @@ def home():
     return render_template('index.html')  # Serve your HTML page
 
 
-@app.route('/submit-order', methods=['POST'])
-@cross_origin()  # Enables CORS for this endpoint
-def submit_order():    
-    # ✅ This part remains as-is (PDF generation + email)
+@app.route('/submit-order', methods=['OPTIONS'])
+def submit_order_options():
+    response = jsonify({"message": "Preflight OK"})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+    return response
     data = request.get_json()
 
     customer = data.get("billing")
