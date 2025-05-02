@@ -1,6 +1,6 @@
-from flask import Flask, request, send_from_directory, render_template
+from flask import Flask, request, send_from_directory, render_template, jsonify
+from flask_cors import CORS, cross_origin  # <-- Import both here
 from fpdf import FPDF
-from flask_cors import CORS #ADDED
 from flask import jsonify
 from email.message import EmailMessage
 import smtplib
@@ -9,7 +9,7 @@ import os
 import json
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)  # This enables CORS for all routes # added
+CORS(app)  # Enables CORS for all routes
 
 @app.route('/')
 def home():
