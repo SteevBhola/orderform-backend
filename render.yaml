@@ -2,6 +2,6 @@ envVars:
   - key: FLASK_ENV
     value: production
   - key: EMAIL_USER
-    value: steevbhola68@gmail.com
+    value: da1@actiontesa.com
   - key: EMAIL_PASS
-    value: dmql ishh hdqj iwye
+    value: Steev@12345
