@@ -16,13 +16,17 @@ def home():
     return render_template('index.html')  # Serve your HTML page
 
 
-@app.route('/submit-order', methods=['OPTIONS'])
-def submit_order_options():
-    response = jsonify({"message": "Preflight OK"})
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-    response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-    return response
+@app.route('/submit-order', methods=['POST', 'OPTIONS'])
+@cross_origin()
+def submit_order():
+    if request.method == 'OPTIONS':
+        response = jsonify({"message": "Preflight OK"})
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
+        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
+        return response
+
+    # ✅ Real POST logic starts here
     data = request.get_json()
 
     customer = data.get("billing")
@@ -34,6 +38,9 @@ def submit_order_options():
     executive = data.get("executive")
     remarks = data.get("remarks")
     items = data.get("items", [])
+
+    from fpdf import FPDF
+    import tempfile
 
     # Generate PDF
     pdf = FPDF()
@@ -78,7 +85,11 @@ def submit_order_options():
         pdf.output(tmp.name)
         pdf_path = tmp.name
 
-    # Send email securely using environment variables
+    # Email
+    import os
+    from email.message import EmailMessage
+    import smtplib
+
     smtp_user = os.environ.get("EMAIL_USER")
     smtp_pass = os.environ.get("EMAIL_PASS")
 
@@ -95,11 +106,12 @@ def submit_order_options():
         smtp.login(smtp_user, smtp_pass)
         smtp.send_message(msg)
 
-
     os.remove(pdf_path)
+
     response = jsonify({"message": "✅ Order submitted and emailed to head office."})
     response.headers.add("Access-Control-Allow-Origin", "*")
     return response
+
 
 
 # Required for Render
