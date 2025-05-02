@@ -1,4 +1,4 @@
-from flask import Flask, request
+from flask import Flask, request, send_from_directory, render_template
 from fpdf import FPDF
 import smtplib
 from email.message import EmailMessage
@@ -6,14 +6,16 @@ import tempfile
 import os
 import json
 
-app = Flask(__name__)
+app = Flask(__name__, static_folder='static', template_folder='templates')
 
 @app.route('/')
 def home():
-    return "✅ Flask app is live. Use POST /submit-order to send an order."
+    return render_template('index.html')  # Serve your HTML page
+
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
+    # ✅ This part remains as-is (PDF generation + email)
     data = request.get_json()
 
     customer = data.get("billing")
