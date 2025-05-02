@@ -4,3 +4,5 @@ reportlab
 fpdf
 Flask==2.0.1
 Flask-Cors==3.0.10
+Werkzeug==2.0.3
+
