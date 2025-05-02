@@ -88,11 +88,9 @@ def submit_order():
     with open(pdf_path, "rb") as f:
         msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="Order.pdf")
 
-    # with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        # smtp.login(smtp_user, smtp_pass)
-        with smtplib.SMTP_SSL("steevbhola68@gmail.com", 465) as smtp:
-        smtp.login(Steev, dmql ishh hdqj iwye)
-        smtp.send_message(msg)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+    smtp.login(smtp_user, smtp_pass)
+    smtp.send_message(msg)
 
     os.remove(pdf_path)
     response = jsonify({"message": "✅ Order submitted and emailed to head office."})
