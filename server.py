@@ -1,13 +1,15 @@
 from flask import Flask, request, send_from_directory, render_template
 from fpdf import FPDF
 from flask_cors import CORS #ADDED
-import smtplib
+from flask import jsonify
 from email.message import EmailMessage
+import smtplib
 import tempfile
 import os
 import json
 
 app = Flask(__name__, static_folder='static', template_folder='templates')
+CORS(app)  # This enables CORS for all routes # added
 
 @app.route('/')
 def home():
@@ -15,9 +17,8 @@ def home():
 
 
 @app.route('/submit-order', methods=['POST'])
-def submit_order():
-    response = jsonify({"message": "Order submitted successfully"}) #added
-    response.headers.add("Access-Control-Allow-Origin", "*") #added
+@cross_origin()  # Enables CORS for this endpoint
+def submit_order():    
     # ✅ This part remains as-is (PDF generation + email)
     data = request.get_json()
 
@@ -94,7 +95,10 @@ def submit_order():
         smtp.send_message(msg)
 
     os.remove(pdf_path)
-    return "✅ Order submitted and emailed to head office."
+    response = jsonify({"message": "✅ Order submitted and emailed to head office."})
+    response.headers.add("Access-Control-Allow-Origin", "*")
+    return response
+
 
 # Required for Render
 if __name__ == '__main__':
