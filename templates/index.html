@@ -254,7 +254,7 @@
 
     async function loadProductData() {
       try {
-        const response = await fetch('product.json');
+        const response = await fetch('/static/product.json');
         productData = await response.json();
       } catch (error) {
         console.error("Error loading product data:", error);
