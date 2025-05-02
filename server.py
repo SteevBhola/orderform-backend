@@ -1,5 +1,6 @@
 from flask import Flask, request, send_from_directory, render_template
 from fpdf import FPDF
+from flask_cors import CORS #ADDED
 import smtplib
 from email.message import EmailMessage
 import tempfile
@@ -15,6 +16,8 @@ def home():
 
 @app.route('/submit-order', methods=['POST'])
 def submit_order():
+    response = jsonify({"message": "Order submitted successfully"}) #added
+    response.headers.add("Access-Control-Allow-Origin", "*") #added
     # ✅ This part remains as-is (PDF generation + email)
     data = request.get_json()
 
@@ -84,8 +87,10 @@ def submit_order():
     with open(pdf_path, "rb") as f:
         msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="Order.pdf")
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(smtp_user, smtp_pass)
+    # with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+        # smtp.login(smtp_user, smtp_pass)
+        with smtplib.SMTP_SSL("steevbhola68@gmail.com", 465) as smtp:
+        smtp.login(Steev, dmql ishh hdqj iwye)
         smtp.send_message(msg)
 
     os.remove(pdf_path)
