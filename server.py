@@ -13,9 +13,21 @@ import os
 from datetime import datetime
 from pathlib import Path
 
+# === Spacy Setup ===
+import spacy
+from spacy.util import is_package
+
+model_name = "en_core_web_sm"
+
+if not is_package(model_name):
+    from spacy.cli import download
+    download(model_name)
+
+nlp = spacy.load(model_name)
+
+# === FastAPI Setup ===
 app = FastAPI()
 
-# Allow CORS for testing/debugging if needed
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -24,7 +36,6 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Static and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory=".")
 
@@ -57,6 +68,10 @@ async def submit_order(
         items = json.loads(products)
     except json.JSONDecodeError:
         return {"status": "error", "message": "Invalid products JSON"}
+
+    # NLP example (optional)
+    doc = nlp(name)
+    print("Name tokens:", [(token.text, token.pos_) for token in doc])
 
     # Generate HTML for PDF
     html_content = f"""
@@ -97,12 +112,10 @@ async def submit_order(
 
     return {"status": "success", "message": "Order submitted"}
 
-# Required for Render
+# Required for Render or GitHub deploy
 if __name__ == "__main__":
     import uvicorn
     import os
 
     port = int(os.environ.get("PORT", 8000))
     uvicorn.run("server:app", host="0.0.0.0", port=port)
-
-
