@@ -29,7 +29,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory=".")
 
 # Load product data
-with open("product.json", "r") as f:
+with open("static/product.json", "r") as f:
     PRODUCTS = json.load(f)
 
 # Models
