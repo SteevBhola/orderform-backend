@@ -1,120 +1,98 @@
-from flask import Flask, request, send_from_directory, render_template, jsonify
-from flask_cors import CORS, cross_origin  # <-- Import both here
-from fpdf import FPDF
-from flask import jsonify
-from email.message import EmailMessage
-import smtplib
-import tempfile
-import os
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse, FileResponse
+from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel
+from typing import List
 import json
+from weasyprint import HTML
+import smtplib
+from email.message import EmailMessage
+import os
+from datetime import datetime
+from pathlib import Path
 
-app = Flask(__name__, static_folder='static', template_folder='templates')
-CORS(app)  # Enables CORS for all routes
+app = FastAPI()
 
-@app.route('/')
-def home():
-    return render_template('index.html')  # Serve your HTML page
+# Allow CORS for testing/debugging if needed
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Static and templates
+app.mount("/static", StaticFiles(directory="static"), name="static")
+templates = Jinja2Templates(directory=".")
 
-@app.route('/submit-order', methods=['POST', 'OPTIONS'])
-@cross_origin()
-def submit_order():
-    if request.method == 'OPTIONS':
-        response = jsonify({"message": "Preflight OK"})
-        response.headers.add("Access-Control-Allow-Origin", "*")
-        response.headers.add("Access-Control-Allow-Methods", "POST, OPTIONS")
-        response.headers.add("Access-Control-Allow-Headers", "Content-Type")
-        return response
+# Load product data
+with open("product.json", "r") as f:
+    PRODUCTS = json.load(f)
 
-    # ✅ Real POST logic starts here
-    data = request.get_json()
+# Models
+class OrderItem(BaseModel):
+    product: str
+    quantity: int
 
-    customer = data.get("billing")
-    shipping = data.get("shipping")
-    po = data.get("po")
-    order_date = data.get("orderDate")
-    mobile = data.get("mobile")
-    contact = data.get("contact")
-    executive = data.get("executive")
-    remarks = data.get("remarks")
-    items = data.get("items", [])
+class Order(BaseModel):
+    name: str
+    email: str
+    items: List[OrderItem]
 
-    from fpdf import FPDF
-    import tempfile
+# Routes
+@app.get("/", response_class=HTMLResponse)
+async def serve_form(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request, "products": PRODUCTS})
 
-    # Generate PDF
-    pdf = FPDF()
-    pdf.add_page()
-    pdf.set_font("Arial", size=12)
-    pdf.cell(200, 10, txt="Order Summary", ln=True, align="C")
-    pdf.set_font("Arial", size=10)
-    pdf.cell(200, 10, txt=f"PO No/Date: {po} | Order Date: {order_date}", ln=True)
-    pdf.cell(200, 10, txt=f"Billing: {customer}", ln=True)
-    pdf.cell(200, 10, txt=f"Shipping: {shipping}", ln=True)
-    pdf.cell(200, 10, txt=f"Contact: {contact} | Mobile: {mobile}", ln=True)
-    pdf.cell(200, 10, txt=f"Executive: {executive}", ln=True)
-    pdf.multi_cell(200, 10, txt=f"Remarks: {remarks}")
-    pdf.ln(5)
+@app.post("/submit")
+async def submit_order(
+    name: str = Form(...),
+    email: str = Form(...),
+    products: str = Form(...)
+):
+    try:
+        items = json.loads(products)
+    except json.JSONDecodeError:
+        return {"status": "error", "message": "Invalid products JSON"}
 
-    pdf.set_font("Arial", 'B', 10)
-    pdf.cell(10, 10, "Sr", 1)
-    pdf.cell(30, 10, "Material", 1)
-    pdf.cell(25, 10, "Product", 1)
-    pdf.cell(20, 10, "Thick", 1)
-    pdf.cell(15, 10, "Grade", 1)
-    pdf.cell(20, 10, "Size", 1)
-    pdf.cell(20, 10, "Boards", 1)
-    pdf.cell(20, 10, "Weight", 1)
-    pdf.cell(30, 10, "Total Wt", 1)
-    pdf.ln()
+    # Generate HTML for PDF
+    html_content = f"""
+    <h1>Order from {name}</h1>
+    <p>Email: {email}</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Product</th><th>Quantity</th></tr>
+        {''.join(f'<tr><td>{item["product"]}</td><td>{item["quantity"]}</td></tr>' for item in items)}
+    </table>
+    """
+    pdf_filename = f"order_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    HTML(string=html_content).write_pdf(pdf_filename)
 
-    pdf.set_font("Arial", '', 10)
-    for i, item in enumerate(items, 1):
-        pdf.cell(10, 10, str(i), 1)
-        pdf.cell(30, 10, item.get("material", "")[:15], 1)
-        pdf.cell(25, 10, item.get("product", "")[:10], 1)
-        pdf.cell(20, 10, item.get("thickness", ""), 1)
-        pdf.cell(15, 10, item.get("grade", ""), 1)
-        pdf.cell(20, 10, item.get("size", ""), 1)
-        pdf.cell(20, 10, item.get("boards", ""), 1)
-        pdf.cell(20, 10, item.get("weight", ""), 1)
-        pdf.cell(30, 10, item.get("totalWeight", ""), 1)
-        pdf.ln()
+    # Email settings
+    HEAD_OFFICE_EMAIL = os.getenv("HEAD_OFFICE_EMAIL", "example@example.com")
+    EMAIL_SENDER = os.getenv("EMAIL_SENDER", "example@example.com")
+    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "password")  # Set securely
 
-    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp:
-        pdf.output(tmp.name)
-        pdf_path = tmp.name
-
-    # Email
-    import os
-    from email.message import EmailMessage
-    import smtplib
-
-    smtp_user = os.environ.get("EMAIL_USER")
-    smtp_pass = os.environ.get("EMAIL_PASS")
-
+    # Send email
     msg = EmailMessage()
-    msg["Subject"] = "New Order Received"
-    msg["From"] = smtp_user
-    msg["To"] = "da1@actiontesa.com"
-    msg.set_content("A new order has been submitted. Please find the PDF attached.")
+    msg["Subject"] = f"New Order from {name}"
+    msg["From"] = EMAIL_SENDER
+    msg["To"] = HEAD_OFFICE_EMAIL
+    msg.set_content(f"Attached is a new order from {name} ({email}).")
 
-    with open(pdf_path, "rb") as f:
-        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="Order.pdf")
+    with open(pdf_filename, "rb") as f:
+        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=pdf_filename)
 
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-        smtp.login(smtp_user, smtp_pass)
-        smtp.send_message(msg)
+    try:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
+            smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            smtp.send_message(msg)
+    except Exception as e:
+        return {"status": "error", "message": f"Email failed: {str(e)}"}
 
-    os.remove(pdf_path)
+    # Clean up PDF
+    Path(pdf_filename).unlink(missing_ok=True)
 
-    response = jsonify({"message": "✅ Order submitted and emailed to head office."})
-    response.headers.add("Access-Control-Allow-Origin", "*")
-    return response
-
-
-
-# Required for Render
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    return {"status": "success", "message": "Order submitted"}
