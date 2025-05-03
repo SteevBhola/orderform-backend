@@ -250,16 +250,16 @@
   </div>
 
   <script>
-    let productData = [];
+     let productData = [];
 
-    async function loadProductData() {
-      try {
-        const response = await fetch('/static/product.json');
-        productData = await response.json();
-      } catch (error) {
-        console.error("Error loading product data:", error);
-      }
+  async function loadProductData() {
+    try {
+      const response = await fetch('/static/product.json');
+      productData = await response.json();
+    } catch (error) {
+      console.error("Error loading product data:", error);
     }
+  }
     // 30-04-2025 working without any plain & lam cateogory
     //     function updateMaterialCode(row) {
     //   const product = row.querySelector(".product")?.value.trim();
@@ -287,62 +287,74 @@
     //     row.querySelector(".material").value = "";
     //   }
     // }
-    function updateMaterialCode(row) {
-      const product = row.querySelector(".product")?.value.trim();
-      const thickness = row.querySelector(".thickness")?.value.trim();
-      const grade = row.querySelector(".Grade")?.value.trim();
-      const size = row.querySelector(".Size")?.value.trim();
-      let side = row.querySelector(".Side")?.value.trim();
-      let shade = row.querySelector(".topshade")?.value.trim();
-      let texture = row.querySelector(".texture")?.value.trim();
-      const qualityMark = row.querySelector(".qualityMark")?.value.trim();
-      const productCertifications = row.querySelector(".ProductCertifications")?.value.trim();
+    // Function to update the material code based on inputs in a row
+  function updateMaterialCode(row) {
+    // Retrieve values from the row (ensure class names match your HTML)
+    const product = row.querySelector(".product")?.value.trim();
+    const thickness = row.querySelector(".thickness")?.value.trim();
+    const grade = row.querySelector(".Grade")?.value.trim();
+    const size = row.querySelector(".Size")?.value.trim();
+    let side = row.querySelector(".Side")?.value.trim();
+    let shade = row.querySelector(".topshade")?.value.trim();
+    let texture = row.querySelector(".texture")?.value.trim();
+    const qualityMark = row.querySelector(".qualityMark")?.value.trim();
+    const productCertifications = row.querySelector(".ProductCertifications")?.value.trim();
 
-      // 🔹 Fetch Product Type (Plain / Lam)
-      const productTypeEntry = productData.find(item => item["Product Helper"] === product);
-      if (!productTypeEntry) return console.error("Product not found in mapping!");
+    // Normalize product string for lookup
+    const normalizedProduct = product?.toLowerCase();
 
-      const productType = productTypeEntry["Product Category Helper"]?.trim().toLowerCase() || "";
-
-      // 🔹 Validate attributes based on Product Type
-      let combinationKey;
-      let isInvalid = false;
-
-      if (productCertifications) {
-        combinationKey = [product, thickness, grade, size, side, shade, texture, productCertifications, qualityMark]
-          .filter(Boolean)
-          .join("-");
-      } else if (productType === "plain") {
-        // ❌ If Side, Shade, or Texture are entered for Plain products → Mark as Invalid
-        if (side || shade || texture) {
-          console.warn("Invalid fields detected for Plain product! Forcing incorrect Material Code.");
-          isInvalid = true;
-        }
-        combinationKey = [product, thickness, grade, size, qualityMark]
-          .filter(Boolean)
-          .join("-");
-      } else if (productType === "lam") {
-        combinationKey = [product, thickness, grade, size, side, shade, texture, qualityMark]
-          .filter(Boolean)
-          .join("-");
-      }
-
-      console.log("Generated Key:", combinationKey);
-
-      // 🔹 Check for correct match
-      const match = productData.find(item =>
-        item["Helper Combined"].replace(/\s+/g, "").toLowerCase() === combinationKey.replace(/\s+/g, "").toLowerCase()
-      );
-
-      // ❌ If invalid fields exist, force incorrect Material Code
-      if (isInvalid) {
-        row.querySelector(".material").value = "";
-      } else if (match) {
-        row.querySelector(".material").value = match.Material.toString();
-      } else {
-        row.querySelector(".material").value = "";
-      }
+    // 🔹 Fetch Product Type (Plain / Lam) using normalized values
+    const productTypeEntry = productData.find(item =>
+      item["Product Helper"]?.trim().toLowerCase() === normalizedProduct
+    );
+    if (!productTypeEntry) {
+      console.error("Product not found in mapping!");
+      return;
     }
+
+    const productType = productTypeEntry["Product Category Helper"]?.trim().toLowerCase() || "";
+
+    // 🔹 Validate attributes and build the combination key
+    let combinationKey = "";
+    let isInvalid = false;
+
+    if (productCertifications) {
+      combinationKey = [product, thickness, grade, size, side, shade, texture, productCertifications, qualityMark]
+        .map(val => val?.trim())
+        .filter(Boolean)
+        .join("-");
+    } else if (productType === "plain") {
+      // If Side, Shade, or Texture are entered for Plain products, mark as invalid.
+      if (side || shade || texture) {
+        console.warn("Invalid fields detected for Plain product! Forcing incorrect Material Code.");
+        isInvalid = true;
+      }
+      combinationKey = [product, thickness, grade, size, qualityMark]
+        .map(val => val?.trim())
+        .filter(Boolean)
+        .join("-");
+    } else if (productType === "lam") {
+      combinationKey = [product, thickness, grade, size, side, shade, texture, qualityMark]
+        .map(val => val?.trim())
+        .filter(Boolean)
+        .join("-");
+    }
+
+    console.log("Generated Key:", combinationKey);
+
+    // 🔹 Check for correct match using normalized keys (remove spaces and lowercase)
+    const normalizedCombinationKey = combinationKey.replace(/\s+/g, "").toLowerCase();
+    const match = productData.find(item =>
+      item["Helper Combined"]?.replace(/\s+/g, "").toLowerCase() === normalizedCombinationKey
+    );
+
+    // If invalid fields exist or no match is found, force incorrect Material Code (clear the field)
+    if (isInvalid || !match) {
+      row.querySelector(".material").value = "";
+    } else {
+      row.querySelector(".material").value = match.Material.toString();
+    }
+  }
 
 
 
