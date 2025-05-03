@@ -8,6 +8,6 @@ services:
       - key: HEAD_OFFICE_EMAIL
         value: da1@actiontesa.com
       - key: EMAIL_SENDER
-        value: your_sender_email@gmail.com
+        value: steevbhola68@gmail.com
       - key: EMAIL_PASSWORD
         sync: false  # set in dashboard
