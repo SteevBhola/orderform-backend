@@ -98,7 +98,7 @@ async def submit_order(
     return {"status": "success", "message": "Order submitted"}
 
 # Required for Render
-if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("server:app", host="0.0.0.0", port=port, reload=False)
 
