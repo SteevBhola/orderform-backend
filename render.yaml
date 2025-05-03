@@ -1,7 +1,13 @@
-envVars:
-  - key: FLASK_ENV
-    value: production
-  - key: EMAIL_USER
-    value: da1@actiontesa.com
-  - key: EMAIL_PASS
-    value: Steev@12345
+services:
+  - type: web
+    name: order-form
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn server:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: HEAD_OFFICE_EMAIL
+        value: your_head_office@example.com
+      - key: EMAIL_SENDER
+        value: your_sender_email@gmail.com
+      - key: EMAIL_PASSWORD
+        sync: false  # set in dashboard
