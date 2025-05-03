@@ -37,7 +37,7 @@ app.add_middleware(
 )
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory=".")
+templates = Jinja2Templates(directory="templates")
 
 # Load product data
 with open("static/product.json", "r") as f:
