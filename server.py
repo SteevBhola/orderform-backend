@@ -3,7 +3,6 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
-from starlette.requests import Request
 from pydantic import BaseModel
 from typing import List, Dict
 import json
@@ -33,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.mount("/static", StaticFiles(directory="static"), name="static")
-templates = Jinja2Templates(directory="templates")  # Ensure FastAPI loads your HTML templates
+templates = Jinja2Templates(directory="templates")
 
 # Load product data (used for serving the form, if needed)
 with open("static/product.json", "r") as f:
@@ -60,12 +59,16 @@ async def serve_form(request: Request):
 
 # Updated endpoint to match the client's endpoint and payload type
 @app.post("/submit-order")
-async def submit_order(order: OrderPayload, request: Request):
-    """ Generate PDF using the existing index.html template """
-    
-     # Render the HTML template dynamically with order data
-    rendered_html = templates.TemplateResponse("index.html", {"request": request, "order": order}).body.decode("utf-8")
-    
+async def submit_order(order: OrderPayload):
+    # Generate HTML content for PDF using order data
+    html_content = f"""
+    <h1>Order from {order.billing}</h1>
+    <p>Mobile: {order.mobile}</p>
+    <table border="1" cellpadding="5" cellspacing="0">
+        <tr><th>Product</th><th>Boards</th></tr>
+        {''.join(f'<tr><td>{item["product"]}</td><td>{item["boards"]}</td></tr>' for item in order.items)}
+    </table>
+    """
     pdf_filename = f"order_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     HTML(string=html_content).write_pdf(pdf_filename)
 
