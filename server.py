@@ -14,6 +14,7 @@ from datetime import datetime
 from pathlib import Path
 import spacy
 from spacy.util import is_package
+from jinja2 import Environment, FileSystemLoader
 
 # --- Spacy Setup ---
 model_name = "en_core_web_sm"
@@ -60,15 +61,25 @@ async def serve_form(request: Request):
 # Updated endpoint to match the client's endpoint and payload type
 @app.post("/submit-order")
 async def submit_order(order: OrderPayload):
-    # Generate HTML content for PDF using order data
-    html_content = f"""
-    <h1>Order from {order.billing}</h1>
-    <p>Mobile: {order.mobile}</p>
-    <table border="1" cellpadding="5" cellspacing="0">
-        <tr><th>Product</th><th>Boards</th></tr>
-        {''.join(f'<tr><td>{item["product"]}</td><td>{item["boards"]}</td></tr>' for item in order.items)}
-    </table>
-    """
+    # 1. Prepare the Jinja2 environment and load the PDF template
+    env = Environment(loader=FileSystemLoader("templates"))
+    template = env.get_template("pdf_template.html")
+    
+    # 2. Render the template with order data
+    html_content = template.render(
+        billing=order.billing,
+        shipping=order.shipping,
+        po=order.po,
+        orderDate=order.orderDate,
+        mobile=order.mobile,
+        contact=order.contact,
+        executive=order.executive,
+        remarks=order.remarks,
+        totalBoards=order.totalBoards,
+        totalWeight=order.totalWeight,
+        items=order.items,
+        # logo_base64=logo_data  # if embedding logo
+    )
     pdf_filename = f"order_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
     HTML(string=html_content).write_pdf(pdf_filename)
 
@@ -79,13 +90,14 @@ async def submit_order(order: OrderPayload):
 
     # Prepare the email
     msg = EmailMessage()
-    msg["Subject"] = f"New Order from {order.billing}"
-    msg["From"] = EMAIL_SENDER
-    msg["To"] = HEAD_OFFICE_EMAIL
-    msg.set_content(f"Attached is a new order from {order.billing} (Mobile: {order.mobile}).")
+msg["Subject"] = f"New Order from {order.billing}"
+msg["From"] = EMAIL_SENDER
+msg["To"] = HEAD_OFFICE_EMAIL
+msg.set_content(f"Attached is a new order from {order.billing} (Mobile: {order.mobile}).")
 
-    with open(pdf_filename, "rb") as f:
-        msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename=pdf_filename)
+with open(pdf_filename, "rb") as f:
+    pdf_data = f.read()
+    msg.add_attachment(pdf_data, maintype="application", subtype="pdf", filename=pdf_filename)
 
     try:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
