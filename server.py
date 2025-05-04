@@ -66,7 +66,7 @@ class OrderData(BaseModel):
     totalBoards: int
     totalWeight: float
 
-@app.post("/submit")
+@app.post("/submit-order")
 async def submit_form(request: Request):
     try:
         data = await request.json()
