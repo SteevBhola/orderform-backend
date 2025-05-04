@@ -1,46 +1,59 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Form
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from fastapi.templating import Jinja2Templates
-from pydantic import BaseModel
-from typing import List, Dict
+from fastapi.middleware.cors import CORSMiddleware
 import json
-from weasyprint import HTML
+import os
 import smtplib
 from email.message import EmailMessage
-import os
-from datetime import datetime
-from pathlib import Path
-import spacy
-from spacy.util import is_package
+from weasyprint import HTML
 from jinja2 import Environment, FileSystemLoader
+from datetime import datetime
+from pydantic import BaseModel
+from typing import List
 
-# --- Spacy Setup ---
-model_name = "en_core_web_sm"
-if not is_package(model_name):
-    from spacy.cli import download
-    download(model_name)
-nlp = spacy.load(model_name)
-
-# --- FastAPI Setup ---
 app = FastAPI()
+
+# Allow frontend access
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Setup template paths
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+env = Environment(loader=FileSystemLoader("templates"))
 
-# Load product data (used for serving the form, if needed)
-with open("static/product.json", "r") as f:
-    PRODUCTS = json.load(f)
+# Load product list
+@app.get("/", response_class=HTMLResponse)
+async def index(request: Request):
+    with open("product.json", "r") as f:
+        product_data = json.load(f)
+    return templates.TemplateResponse("index.html", {"request": request, "products": product_data})
 
-# --- Define the Pydantic Model matching the JSON payload ---
-class OrderPayload(BaseModel):
+# Pydantic models for safety
+class ProductItem(BaseModel):
+    material: str
+    product: str
+    thickness: str
+    Grade: str
+    Size: str
+    Side: str
+    topshade: str
+    shadeName: str
+    texture: str
+    productCertification: str
+    qualityMark: str
+    boards: int
+    weight: float
+    totalWeight: float
+    remarks: str
+
+class OrderData(BaseModel):
     billing: str
     shipping: str
     po: str
@@ -49,67 +62,54 @@ class OrderPayload(BaseModel):
     contact: str
     executive: str
     remarks: str
-    totalBoards: str
-    totalWeight: str
-    items: List[Dict[str, str]]
+    items: List[ProductItem]
+    totalBoards: int
+    totalWeight: float
 
-# --- Routes ---
-@app.get("/", response_class=HTMLResponse)
-async def serve_form(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request, "products": PRODUCTS})
-
-# Updated endpoint to match the client's endpoint and payload type
-@app.post("/submit-order")
-async def submit_order(order: OrderPayload):
-    # 1. Prepare the Jinja2 environment and load the PDF template
-    env = Environment(loader=FileSystemLoader("templates"))
-    template = env.get_template("pdf_template.html")
-    
-    # 2. Render the template with order data
-    html_content = template.render(
-        billing=order.billing,
-        shipping=order.shipping,
-        po=order.po,
-        orderDate=order.orderDate,
-        mobile=order.mobile,
-        contact=order.contact,
-        executive=order.executive,
-        remarks=order.remarks,
-        totalBoards=order.totalBoards,
-        totalWeight=order.totalWeight,
-        items=order.items,
-        # logo_base64=logo_data  # if embedding logo
-    )
-    pdf_filename = f"order_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-    HTML(string=html_content).write_pdf(pdf_filename)
-
-    # Email settings (ensure environment variables are set correctly)
-    HEAD_OFFICE_EMAIL = os.getenv("HEAD_OFFICE_EMAIL", "example@example.com")
-    EMAIL_SENDER = os.getenv("EMAIL_SENDER", "example@example.com")
-    EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD", "password")  # Secure this in production
-
-    # Prepare the email
-    msg = EmailMessage()
-msg["Subject"] = f"New Order from {order.billing}"
-msg["From"] = EMAIL_SENDER
-msg["To"] = HEAD_OFFICE_EMAIL
-msg.set_content(f"Attached is a new order from {order.billing} (Mobile: {order.mobile}).")
-
-with open(pdf_filename, "rb") as f:
-    pdf_data = f.read()
-    msg.add_attachment(pdf_data, maintype="application", subtype="pdf", filename=pdf_filename)
-
+@app.post("/submit")
+async def submit_form(request: Request):
     try:
+        data = await request.json()
+        template = env.get_template("pdf_template.html")
+
+        # Render HTML from template
+        html_out = template.render(
+            billing=data["billing"],
+            shipping=data["shipping"],
+            po=data["po"],
+            orderDate=data["orderDate"],
+            mobile=data["mobile"],
+            contact=data["contact"],
+            executive=data["executive"],
+            remarks=data["remarks"],
+            items=data["items"],
+            totalBoards=data["totalBoards"],
+            totalWeight=data["totalWeight"]
+        )
+
+        # Generate PDF
+        pdf_path = f"/tmp/order_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+        HTML(string=html_out).write_pdf(pdf_path)
+
+        # Email PDF
+        msg = EmailMessage()
+        msg["Subject"] = "New Customer Order"
+        msg["From"] = os.environ.get("EMAIL_SENDER")
+        msg["To"] = os.environ.get("EMAIL_RECEIVER")
+        msg.set_content("New order received. PDF attached.")
+
+        with open(pdf_path, "rb") as f:
+            msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="CustomerOrder.pdf")
+
         with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
-            smtp.login(EMAIL_SENDER, EMAIL_PASSWORD)
+            smtp.login(os.environ.get("EMAIL_SENDER"), os.environ.get("EMAIL_PASSWORD"))
             smtp.send_message(msg)
+
+        return JSONResponse(status_code=200, content={"status": "success", "message": "Order submitted and email sent."})
+
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "message": f"Email failed: {str(e)}"})
 
-    # Clean up the generated PDF file
-    Path(pdf_filename).unlink(missing_ok=True)
-
-    return {"status": "success", "message": "Order submitted"}
 
 # Required for Render or GitHub deploy
 if __name__ == "__main__":
