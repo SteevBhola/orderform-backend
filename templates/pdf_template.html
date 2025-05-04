@@ -1,89 +1,172 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
+  <title>Order PDF</title>
   <style>
-    body { font-family: Arial, sans-serif; font-size: 12px; }
-    table { width: 100%; border-collapse: collapse; }
-    td, th { border: 1px solid black; padding: 4px; text-align: center; vertical-align: middle; }
-    .header, .footer { font-weight: bold; }
-    .no-border { border: none; }
-    .green-bg { background-color: #d9fdd3; }
-    .red-bg { background-color: #ff4c4c; color: white; }
-    .ok-weight { background-color: #00b050; color: white; font-weight: bold; }
-    .remarks { height: 50px; text-align: left; }
-    .note { font-size: 10px; }
+    body {
+      font-family: Arial, sans-serif;
+      font-size: 12px;
+      padding: 10mm;
+      margin: 0;
+      width: 297mm;
+      height: 210mm;
+    }
+    h2 {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      font-size: 20px;
+    }
+    .form-section {
+      margin-bottom: 10px;
+    }
+    .form-section label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 3px;
+    }
+    .flex {
+      display: flex;
+      justify-content: space-between;
+    }
+    .half-width {
+      width: 48%;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 11px;
+    }
+    th, td {
+      border: 1px solid #000;
+      padding: 5px;
+      text-align: center;
+    }
+    thead {
+      background-color: #f2f2f2;
+    }
+    tfoot td {
+      font-weight: bold;
+    }
+    .footer-note {
+      text-align: center;
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
+      font-size: 14px;
+    }
+    @page {
+      size: B5 landscape;
+      margin: 10mm;
+    }
   </style>
 </head>
 <body>
-  <table>
-    <tr>
-      <td colspan="2">Customer Name<br>(Billing Address, If Change)</td>
-      <td colspan="2" class="green-bg"><strong>W.E.F</strong><br>{{ orderDate }}</td>
-      <td colspan="2">Delivery Address (Mandatory)</td>
-    </tr>
-    <tr>
-      <td colspan="2">PO Number (MANDATORY)</td>
-      <td colspan="2">{{ po }}</td>
-      <td colspan="2">Order Date</td>
-    </tr>
-    <tr>
-      <td colspan="6">MO No :</td>
-    </tr>
-    <tr><td colspan="6">Contact Person :-</td></tr>
-    <tr>
-      <th>S.NO</th><th>Material Code</th><th>PRODUCTS</th><th>Thickness</th><th>Grade</th><th>Size</th>
-      <th>Top Shade</th><th>Shade Name</th><th>Texture</th><th>Product Certifications</th>
-      <th>Quality Mark</th><th>No of Boards</th><th>Weight Per Board</th><th>Total Weight</th><th>Remarks</th>
-    </tr>
-    {% for item in items %}
-    <tr>
-      <td>{{ loop.index }}</td>
-      <td>{{ item.material }}</td>
-      <td>{{ item.product }}</td>
-      <td>{{ item.thickness }}</td>
-      <td>{{ item.Grade }}</td>
-      <td>{{ item.Size }}</td>
-      <td>{{ item.topshade }}</td>
-      <td>{{ item.shadeName }}</td>
-      <td>{{ item.texture }}</td>
-      <td>{{ item.productCertification }}</td>
-      <td>{{ item.qualityMark }}</td>
-      <td>{{ item.boards }}</td>
-      <td>{{ '%.3f' % item.weight }}</td>
-      <td>{{ '%.3f' % item.totalWeight }}</td>
-      <td>{{ item.remarks }}</td>
-    </tr>
-    {% endfor %}
-    {% for i in range(20 - items|length) %}
-    <tr><td colspan="15">&nbsp;</td></tr>
-    {% endfor %}
-    <tr>
-      <td colspan="6" class="green-bg"><strong>ORDER WEIGHT(MT)</strong></td>
-      <td colspan="2" class="red-bg">{{ '%.2f' % totalWeight }}</td>
-      <td colspan="2" class="{% if totalWeight < 9000 %}ok-weight{% else %}red-bg{% endif %}">
-        {% if totalWeight < 9000 %}OK WEIGHT{% else %}WRONG WEIGHT{% endif %}
-      </td>
-      <td colspan="5"></td>
-    </tr>
-    <tr>
-      <td colspan="6">BRANCH (BOOKED BY NAME')</td>
-      <td colspan="2">TOTAL</td>
-      <td>{{ totalBoards }}</td>
-      <td colspan="2">{{ '%.3f' % totalWeight }}</td>
-      <td colspan="2"></td>
-    </tr>
-  </table>
+
+  <h2>Customer Order Form</h2>
+
+  <div class="form-section">
+    <label>Customer Billing Name & Address:</label>
+    <p>{{ billing }}</p>
+  </div>
+
+  <div class="form-section">
+    <label>Customer Shipping Name & Address:</label>
+    <p>{{ shipping }}</p>
+  </div>
+
+  <div class="form-section flex">
+    <div class="half-width">
+      <label>PO Date & No:</label>
+      <p>{{ po }}</p>
+    </div>
+    <div class="half-width">
+      <label>Order Date:</label>
+      <p>{{ orderDate }}</p>
+    </div>
+  </div>
+
+  <div class="form-section flex">
+    <div class="half-width">
+      <label>Customer Mobile Number:</label>
+      <p>{{ mobile }}</p>
+    </div>
+    <div class="half-width">
+      <label>Customer Contact Person:</label>
+      <p>{{ contact }}</p>
+    </div>
+  </div>
+
+  <div class="form-section">
+    <label>Branch Executive Name:</label>
+    <p>{{ executive }}</p>
+  </div>
+
+  <div class="form-section">
+    <label>Special Remarks / Discounts:</label>
+    <p>{{ remarks }}</p>
+  </div>
 
   <table>
-    <tr>
-      <td class="remarks" colspan="15">Special Remarks / Discounts:<br>{{ remarks }}</td>
-    </tr>
-    <tr>
-      <td class="no-border note" colspan="15">
-        Note : Pls recheck before sending order to HO about - Weight / Delivery Address / Extra Discount / Remarks. No Complaints will be entertain there after
-      </td>
-    </tr>
+    <thead>
+      <tr>
+        <th>Sr No</th>
+        <th>Material Code</th>
+        <th>Product</th>
+        <th>Thickness</th>
+        <th>Grade</th>
+        <th>Size</th>
+        <th>Side</th>
+        <th>Top Shade</th>
+        <th>Shade Name</th>
+        <th>Texture</th>
+        <th>Certifications</th>
+        <th>Quality Mark</th>
+        <th>No of Boards</th>
+        <th>Weight/Board</th>
+        <th>Total Weight</th>
+        <th>Remarks</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in items %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ item.material }}</td>
+        <td>{{ item.product }}</td>
+        <td>{{ item.thickness }}</td>
+        <td>{{ item.Grade }}</td>
+        <td>{{ item.Size }}</td>
+        <td>{{ item.Side }}</td>
+        <td>{{ item.topshade }}</td>
+        <td>{{ item.shadeName }}</td>
+        <td>{{ item.texture }}</td>
+        <td>{{ item.productCertification }}</td>
+        <td>{{ item.qualityMark }}</td>
+        <td>{{ item.boards }}</td>
+        <td>{{ item.weight }}</td>
+        <td>{{ item.totalWeight }}</td>
+        <td>{{ item.remarks }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="12" style="text-align:right;">Total:</td>
+        <td>{{ totalBoards }}</td>
+        <td></td>
+        <td>{{ totalWeight }}</td>
+        <td></td>
+      </tr>
+    </tfoot>
   </table>
+
+  <div class="footer-note">
+    Note: Please recheck before sending order to HO. Changes may not be possible once processed.
+  </div>
+
 </body>
 </html>
