@@ -31,7 +31,7 @@ env = Environment(loader=FileSystemLoader("templates"))
 # Load product list
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
-    with open("product.json", "r") as f:
+    with open("static/product.json", "r") as f:
         product_data = json.load(f)
     return templates.TemplateResponse("index.html", {"request": request, "products": product_data})
 
