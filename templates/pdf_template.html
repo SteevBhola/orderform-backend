@@ -1,100 +1,124 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Order Form</title>
+  <title>Order PDF</title>
   <style>
-    body {
+ body {
       font-family: Arial, sans-serif;
       font-size: 12px;
+      padding: 10mm;
       margin: 0;
+      width: 297mm;
+      height: 210mm;
+    }
+    h2 {
+      background-color: #007bff;
+      color: #fff;
       padding: 10px;
-    }
-
-    table {
-      border-collapse: collapse;
-      width: 100%;
-    }
-
-    td, th {
-      border: 1.5px solid #000;
-      padding: 4px;
       text-align: center;
-      vertical-align: top;
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
+    .form-section {
+      margin-bottom: 0px;  
+      text-align: center;
+    }
+    .form-section label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+      padding: 1px;
+    }
+    .flex {
+      display: flex;
+      justify-content: space-between;
+      gap: 0%;
+      margin-bottom: 0px;
+    }
+
+    .half-width {
+      width: 50%;
+      box-sizing: border-box;
+      text-align: center;
+    }
+    
+    .border-box {
+      border: 2px solid #000;
+      padding: 5px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 15px;
+      font-size: 11px;
+      margin-bottom: 1px;
+    }
+    th, td {
+      border: 2px solid #000;
+      padding: 5px;
+      text-align: center;
       word-wrap: break-word;
     }
-
-    .top-table td {
-      vertical-align: top;
-      padding: 6px;
+    thead {
+      background-color: #f2f2f2;
     }
-
-    .green-box {
-      background-color: #c1f4c1;
+    tfoot td {
       font-weight: bold;
+    }
+    .footer-note {
       text-align: center;
+      color: red;
+      font-weight: bold;
+      margin-top: 20px;
       font-size: 14px;
-      line-height: 1.5;
     }
+    @page {
+      size: A4 landscape;
+      margin: 10mm;
+    }
+  </style>
 
-    .bold-left-border {
-      border-left: 3px solid #000 !important;
-    }
-
-    .section-title {
-      font-weight: bold;
-    }
-
-    .remarks-box {
-      height: 60px;
-    }
-
-    .note {
-      text-align: center;
-      font-weight: bold;
-      padding-top: 8px;
-      border-top: 1.5px solid #000;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
 
-  <!-- Top Section -->
-  <table class="top-table">
-    <tr>
-      <td style="width: 45%;">
-        <span class="section-title">Customer Billing Name & Address:</span><br>
-        {{ billing_name }}
-      </td>
-      <td style="width: 10%;" class="green-box bold-left-border">
-        W.E.F<br>{{ wef_date }}
-      </td>
-      <td style="width: 45%;">
-        <span class="section-title">Customer Shipping Name & Address:</span><br>
-        {{ shipping_name }}
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <span class="section-title">PO Date & No:</span> {{ po_no }}
-      </td>
-      <td>
-        <span class="section-title">Order Date:</span> {{ order_date }}
-      </td>
-    </tr>
-    <tr>
-      <td colspan="2">
-        <span class="section-title">Customer Mobile Number:</span> {{ mobile }}
-      </td>
-      <td>
-        <span class="section-title">Customer Contact Person:</span> {{ contact_person }}
-      </td>
-    </tr>
-  </table>
+  <h2>Customer Order Form</h2>
 
-  <!-- Product Table -->
+   <!-- Billing -->
+   <div class="form-section flex">
+    <div class="half-width border-box" >
+      <label for="billing">Customer Billing Name & Address</label>
+      <p>{{ billing }}</p>
+  </div>
+  <div class="half-width border-box"> 
+     <label>Customer Shipping Name & Address:</label>
+    <p>{{ shipping }}</p>
+  </div>
+   </div>
+
+  <div class="form-section flex">
+    <div class="half-width border-box">
+      <label>PO Date & No:</label>
+      <p>{{ po }}</p>
+    </div>
+    <div class="half-width border-box">
+      <label>Order Date:</label>
+      <p>{{ orderDate }}</p>
+    </div>
+  </div>
+
+  <div class="form-section flex">
+    <div class="half-width border-box">
+      <label>Customer Mobile Number:</label>
+      <p>{{ mobile }}</p>
+    </div>
+    <div class="half-width border-box">
+      <label>Customer Contact Person:</label>
+      <p>{{ contact }}</p>
+    </div>
+  </div>
+
   <table style="table-layout: fixed; width: 100%;">
     <thead>
       <tr>
@@ -108,7 +132,7 @@
         <th>Top Shade</th>
         <th>Shade Name</th>
         <th>Texture</th>
-        <th>Certifications</th>
+        <th>Product Certifications</th>
         <th>Quality Mark</th>
         <th>No of Boards</th>
         <th>Weight/Board</th>
@@ -120,52 +144,47 @@
       {% for item in items %}
       <tr>
         <td>{{ loop.index }}</td>
-        <td>{{ item.material_code }}</td>
+        <td>{{ item.material }}</td>
         <td>{{ item.product }}</td>
         <td>{{ item.thickness }}</td>
-        <td>{{ item.grade }}</td>
-        <td>{{ item.size }}</td>
-        <td>{{ item.side }}</td>
-        <td>{{ item.top_shade }}</td>
-        <td>{{ item.shade_name }}</td>
+        <td>{{ item.Grade }}</td>
+        <td>{{ item.Size }}</td>
+        <td>{{ item.Side }}</td>
+        <td>{{ item.topshade }}</td>
+        <td>{{ item.shadeName }}</td>
         <td>{{ item.texture }}</td>
-        <td>{{ item.certifications }}</td>
-        <td>{{ item.quality_mark }}</td>
-        <td>{{ item.num_boards }}</td>
-        <td>{{ item.weight_per_board }}</td>
-        <td>{{ item.total_weight }}</td>
+        <td>{{ item.productCertification }}</td>
+        <td>{{ item.qualityMark }}</td>
+        <td>{{ item.boards }}</td>
+        <td>{{ item.weight }}</td>
+        <td>{{ item.totalWeight }}</td>
         <td>{{ item.remarks }}</td>
       </tr>
       {% endfor %}
     </tbody>
     <tfoot>
       <tr>
-        <td colspan="12" style="text-align: right; font-weight: bold;">TOTAL</td>
-        <td>{{ total_boards }}</td>
+        <td colspan="12" style="text-align:right;">Total:</td>
+        <td>{{ totalBoards }}</td>
         <td></td>
-        <td>{{ total_weight }}</td>
+        <td>{{ totalWeight }}</td>
         <td></td>
       </tr>
     </tfoot>
   </table>
 
-  <!-- Branch and Remarks -->
-  <table>
-    <tr>
-      <td colspan="16">
-        <span class="section-title">Branch Executive Name:</span> {{ branch_exec }}
-      </td>
-    </tr>
-    <tr>
-      <td colspan="16">
-        <span class="section-title">Special Remarks / Discounts:</span><br><br>
-        <div class="remarks-box">{{ special_remarks }}</div>
-      </td>
-    </tr>
-  </table>
 
-  <!-- Final Note -->
-  <div class="note">
+  <div class="form-section border-box">
+    <label>Branch Executive Name:</label>
+    <p>{{ executive }}</p>
+  </div>
+
+  <div class="form-section border-box">
+    <label>Special Remarks / Discounts:</label>
+    <p>{{ remarks }}</p>
+  </div>
+
+  <div class="footer-note">
     Note: Please recheck before sending order to HO. Changes may not be possible once processed.
   </div>
 
