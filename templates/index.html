@@ -633,7 +633,7 @@
         <td><input type="number" class="boards" value="0" oninput="calculateWeight(this)"></td>
         <td><input type="number" class="weight" value="0" oninput="calculateWeight(this)"></td>
                 <td class="totalWeight">0.00</td>
-        <td><input type="text"></td>
+        <td><input type="text" class="remarks"></td>
         <td><button type="button" onclick="removeRow(this)">Remove</button></td>
       `;
       tbody.appendChild(row);
@@ -716,10 +716,18 @@
       material: row.querySelector(".material")?.value || "",
       product: row.querySelector(".product")?.value || "",
       thickness: row.querySelector(".thickness")?.value || "",
+      grade: row.querySelector(".Grade")?.value||"",
       size: row.querySelector(".Size")?.value || "",
+      side: row.querySelector(".Side")?.value||"",
+      topshade: row.querySelector(".topshade")?.value || "",
+      shadeName: row.querySelector(".shadename")?.value || "",
+      texture: row.querySelector(".texture")?.value || "",
+      productCertification: row.querySelector(".ProductCertifications")?.value||"",
+      qualityMark:row.querySelector(".qualitymark")?.value||"",
       boards: row.querySelector(".boards")?.value || "0",
       weight: row.querySelector(".weight")?.value || "0",
-      totalWeight: row.querySelector(".totalWeight")?.textContent || "0"
+      totalWeight: row.querySelector(".totalWeight")?.textContent || "0",
+      remarks: row.querySelector(".remarks")?.value||"",
     });
   });
 
