@@ -11,6 +11,7 @@
       margin: 0;
       width: 297mm;
       height: 210mm;
+      border: 1px;
     }
     h2 {
       background-color: #007bff;
@@ -20,6 +21,8 @@
       font-size: 20px;
       margin-bottom: 15px;
     }
+
+       
     .form-section {
       margin-bottom: 0px;  
       text-align: center;
@@ -50,13 +53,13 @@
     table {
       width: 100%;
       border-collapse: collapse;
-      margin-top: 15px;
+      margin-top: 0px;
       font-size: 11px;
-      margin-bottom: 1px;
+      margin-bottom: 0px;
     }
     th, td {
-      border: 2px solid #000;
-      padding: 5px;
+      border: 1px solid #dfd5d5ea;
+      padding: 0px;
       text-align: center;
       word-wrap: break-word;
     }
@@ -66,6 +69,15 @@
     tfoot td {
       font-weight: bold;
     }
+
+    .Header-raw{
+    border: 1px solid #000;
+    }
+
+    .Header-data{
+      padding: 30px;
+    }
+
     .footer-note {
       text-align: center;
       color: red;
@@ -73,10 +85,16 @@
       margin-top: 20px;
       font-size: 14px;
     }
+
+    .section-title {
+      font-weight: bold;
+    }
     @page {
       size: A4 landscape;
       margin: 10mm;
     }
+
+   
   </style>
 
   </style>
@@ -84,8 +102,47 @@
 <body>
 
   <h2>Customer Order Form</h2>
+  <p1>Last Updated : 05-May-2025</p1>
 
-   <!-- Billing -->
+  <table class="Header-table" cellpadding="8" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+    <tr class="Header-raw">
+      <th>Customer Billing Name & Address</th>
+      <!-- <th>W.E.F</th> -->
+      <th>Customer Shipping Name & Address</th>
+    </tr>
+    <tr>
+      <td class="Header-data" style="width:45%;">{{ billing }}</td>
+      <!-- <td style="width:10%;">05-May-2025</td> -->
+      <td class="Header-data" style="width:45%;">{{ shipping }}</td>
+    </tr>  
+    <tr>
+      <th>PO No</th>
+      <!-- <th></th> -->
+      <th>Customer Mobile Number</th>
+    </tr>
+    <tr>
+      <td class="Header-data-po" style="padding: 5px;">{{ po }}</td>
+      <!-- <td></td> -->
+      <td class="Header-data-cd" style="padding: 5px;" >{{ mobile }}</td>
+    </tr>
+  
+    <tr>
+      
+      <th>PO Date</th>
+      <!-- <th></th> -->
+      <th>Customer Contact Person</th>
+    </tr>
+    <tr>    
+      <td class="Header-data-po" style="padding: 5px;">{{ orderDate }}</td>
+      <!-- <td></td> -->
+      <td class="Header-data-cd" style="padding: 5px;">{{ contact }}</td>
+    </tr>
+    
+  </table>
+  
+
+
+   <!-- Billing
    <div class="form-section flex">
     <div class="half-width border-box" >
       <label for="billing">Customer Billing Name & Address</label>
@@ -117,9 +174,9 @@
       <label>Customer Contact Person:</label>
       <p>{{ contact }}</p>
     </div>
-  </div>
+  </div> -->
 
-  <table style="table-layout: fixed; width: 100%;">
+  <table class="order-body" style="table-layout: fixed; width: 100%;">
     <thead>
       <tr>
         <th>Sr No</th>
@@ -147,9 +204,9 @@
         <td>{{ item.material }}</td>
         <td>{{ item.product }}</td>
         <td>{{ item.thickness }}</td>
-        <td>{{ item.Grade }}</td>
-        <td>{{ item.Size }}</td>
-        <td>{{ item.Side }}</td>
+        <td>{{ item.grade }}</td>
+        <td>{{ item.size }}</td>
+        <td>{{ item.side }}</td>
         <td>{{ item.topshade }}</td>
         <td>{{ item.shadeName }}</td>
         <td>{{ item.texture }}</td>
@@ -174,7 +231,7 @@
   </table>
 
 
-  <div class="form-section border-box">
+  <!-- <div class="form-section border-box">
     <label>Branch Executive Name:</label>
     <p>{{ executive }}</p>
   </div>
@@ -182,7 +239,41 @@
   <div class="form-section border-box">
     <label>Special Remarks / Discounts:</label>
     <p>{{ remarks }}</p>
-  </div>
+  </div> -->
+
+
+  
+  <!-- Branch and Remarks -->
+  <table>
+    <tr>
+      <td colspan="16">
+        <span class="section-title">Branch Executive Name:</span> {{ executive }}
+      </td>
+    </tr>
+    <tr>
+      <td colspan="16">
+        <span class="section-title">Special Remarks / Discounts:</span><br><br>
+        <div class="remarks-box">{{ remarks  }}</div>
+      </td>
+    </tr>
+  </table>
+
+  <!-- <table class="Header-table" cellpadding="8" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+    <tr class="Header-raw">
+      <th>Branch Executive Name:</th>
+    </tr>
+         <tr>
+      <th>Special Remarks / Discounts:</th>
+    </tr>
+    <tr>
+      <td class="Header-data" style="width:45%;">{{ executive  }}</td>
+    </tr>
+ 
+      <tr>
+      <td class="Header-data" style="width:45%;">{{ remarks }}</td>
+    </tr>  
+    
+  </table> -->
 
   <div class="footer-note">
     Note: Please recheck before sending order to HO. Changes may not be possible once processed.
