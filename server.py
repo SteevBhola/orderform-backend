@@ -93,11 +93,22 @@ async def submit_form(request: Request):
 
         # Email PDF
         msg = EmailMessage()
-        msg["Subject"] = "New Customer Order"
+        msg["Subject"] = f"PO No : {data['po']} - {data['billing'].splitlines()[0]}"  # First line of billing as customer name
         msg["From"] = os.environ.get("EMAIL_SENDER")
         msg["To"] = os.environ.get("HEAD_OFFICE_EMAIL")
         msg["Reply-To"] = data["email"]
-        msg.set_content("New order received. PDF attached.")
+        msg.set_content(f"""
+        Dear Sir,
+
+        Please find the attached order of {data['billing'].splitlines()[0]}
+        
+        PO Number : {data['po']}
+        PO Date   : {data['orderDate']}
+        Special Remark : {data['remarks']}
+        
+        Thanks & Regards  
+        Reply to: {data['email']}
+        """)
 
 
         with open(pdf_path, "rb") as f:
