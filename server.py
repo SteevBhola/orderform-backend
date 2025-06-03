@@ -96,7 +96,9 @@ async def submit_form(request: Request):
         msg["Subject"] = "New Customer Order"
         msg["From"] = os.environ.get("EMAIL_SENDER")
         msg["To"] = os.environ.get("HEAD_OFFICE_EMAIL")
+        msg["Reply-To"] = data["email"]
         msg.set_content("New order received. PDF attached.")
+
 
         with open(pdf_path, "rb") as f:
             msg.add_attachment(f.read(), maintype="application", subtype="pdf", filename="CustomerOrder.pdf")
