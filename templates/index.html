@@ -188,6 +188,14 @@
     </div>
   </div>
 
+  <!-- ✅ New row added below for Email ID -->
+<div class="form-section flex">
+  <div class="half-width">
+    <label for="email">Your Email</label>
+    <input type="email" id="email" required>
+  </div>
+</div>
+
   <!-- Add Product Button -->
   <button type="button" onclick="addRow()">Add Product</button>
 
@@ -742,6 +750,7 @@
     remarks: document.getElementById("remarks").value,
     totalBoards: document.getElementById("boardsTotal").textContent,
     totalWeight: document.getElementById("overallTotalWeight").textContent,
+    email: document.getElementById("email").value,
     items: items
   };
 
